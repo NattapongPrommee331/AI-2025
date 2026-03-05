@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>สร้างคอมพิวเตอร์ด้วยตัวคุณ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* ตั้งค่าพื้นฐาน: ฟอนต์และสีพื้นหลังหน้าจอ */
+        body { font-family: 'Inter', sans-serif; background: #f1f5f9; }
+        /* สไตล์การ์ดหลักสีขาว */
+        .card { background: white; border-radius: 2rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        
+        /* สไตล์ปุ่ม Toggle Switch (เปิด-ปิด) */
+        .switch { position: relative; inline-size: 3.5rem; block-size: 2rem; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        /* ส่วนรางของปุ่ม */
+        .slider { 
+            position: absolute; cursor: pointer; inset: 0; 
+            background-color: #cbd5e1; transition: .4s; border-radius: 2rem; 
+        }
+        /* วงกลมบนปุ่ม */
+        .slider:before { 
+            position: absolute; content: ""; block-size: 1.5rem; inline-size: 1.5rem; 
+            inset-inline-start: 4px; inset-block-end: 4px; 
+            background-color: white; transition: .4s; border-radius: 50%; 
+        }
+        /* เมื่อกดเปิดปุ่ม: เปลี่ยนสีพื้นหลังเป็นม่วง และเลื่อนวงกลมไปทางขวา */
+        input:checked + .slider { background-color: #9333ea; }
+        input:checked + .slider:before { transform: translateX(1.5rem); }
+    </style>
+</head>
+<body class="p-4 md:p-10 max-w-4xl mx-auto">
+
+    <h1 class="text-4xl font-black mb-2 text-slate-900 italic">สร้างคอมพิวเตอร์ด้วยตัวคุณ 🚀</h1>
+    <p class="text-slate-500 mb-10">จัดสเปคคอมพิวเตอร์ที่ฉลาดและคุ้มค่าที่สุด</p>
+
+    <div class="grid md:grid-cols-1 gap-8">
+        <div class="card p-8 border border-slate-200">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-xl font-bold flex items-center gap-2">
+                    <span class="bg-purple-600 text-white p-1 rounded-lg text-sm">STEP 1</span> 
+                    กำหนดงบประมาณและอุปกรณ์
+                </h2>
+                <div class="flex items-center gap-3">
+                    <span id="toggle_label" class="text-sm font-bold text-purple-600">จำกัดงบประมาณ</span>
+                    <label class="switch">
+                        <input type="checkbox" id="budget_toggle" checked onchange="toggleBudgetMode(this.checked)">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="budget_section" class="mb-10 transition-all duration-300">
+                <div class="flex justify-between items-end mb-4">
+                    <label class="text-slate-600 font-medium">งบประมาณที่ต้องการ</label>
+                    <span id="budget_display" class="text-3xl font-black text-purple-600">30,000 ฿</span>
+                </div>
+                <input type="range" id="budget_slider" min="8000" max="100000" step="1000" value="30000" 
+                    class="w-full h-3 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                    oninput="updateBudget(this.value)">
+            </div>
+
+            <div id="unlimited_msg" class="hidden mb-10 p-6 bg-purple-50 border-2 border-dashed border-purple-200 rounded-2xl text-center">
+                <p class="text-purple-600 font-bold text-lg">🚀 โหมดไม่จำกัดงบ: ระบบจะเลือกชิ้นส่วนที่แรงที่สุดในคลังข้อมูล</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div>
+                    <label class="block text-sm font-bold text-slate-500 mb-2 uppercase">CPU Brand</label>
+                    <select id="cpu_brand" class="w-full p-4 bg-slate-50 border rounded-2xl focus:ring-2 focus:ring-purple-500 outline-none font-medium">
+                        <option value="Any">อะไรก็ได้</option>
+                        <option value="Intel">Intel Only</option>
+                        <option value="AMD">AMD Only</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-500 mb-2 uppercase">GPU Brand</label>
+                    <select id="gpu_brand" class="w-full p-4 bg-slate-50 border rounded-2xl focus:ring-2 focus:ring-purple-500 outline-none font-medium">
+                        <option value="Any">อะไรก็ได้</option>
+                        <option value="NVIDIA">NVIDIA GeForce</option>
+                        <option value="AMD">AMD Radeon</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-500 mb-2 uppercase">RAM Selection</label>
+                    <select id="ram_size" class="w-full p-4 bg-slate-50 border rounded-2xl font-medium focus:ring-2 focus:ring-purple-500 outline-none">
+                        <option value="Any">อะไรก็ได้ </option>
+                        <option value="4">4 GB </option>
+                        <option value="8">8 GB </option>
+                        <option value="16">16 GB </option>
+                        <option value="32">32 GB </option>
+                        <option value="64">64 GB+</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-bold text-slate-500 mb-2 uppercase">Storage (SSD)</label>
+                    <select id="ssd_size" class="w-full p-4 bg-slate-50 border rounded-2xl font-medium focus:ring-2 focus:ring-purple-500 outline-none">
+                        <option value="Any">อะไรก็ได้ (เน้นคุ้มค่า)</option>
+                        <option value="0">ไม่ติดตั้ง (มี HDD เดิม)</option>
+                        <option value="250">250 GB</option>
+                        <option value="500">500 GB</option>
+                        <option value="1000">1 TB</option>
+                        <option value="2000">2 TB</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="buildPC()" class="w-full p-5 bg-slate-900 text-white rounded-2xl font-bold text-xl hover:bg-purple-600 transition-all shadow-lg hover:shadow-purple-200">
+                Generate Best Build ✨
+            </button>
+        </div>
+
+        <div id="result_area" class="hidden card p-8 border-2 border-purple-100 bg-gradient-to-br from-white to-purple-50">
+            <h3 class="text-2xl font-black text-slate-800 mb-6 italic">YOUR AI BUILD 🛠️</h3>
+            <div id="specs_list" class="space-y-4 text-lg"></div>
+        </div>
+    </div>
+
+    <script>
+        /**
+         * ฟังก์ชันอัปเดตตัวเลขราคาบนหน้าจอเวลาเลื่อน Slider
+         */
+        function updateBudget(val) {
+            document.getElementById('budget_display').innerText = parseInt(val).toLocaleString() + " ฿";
+        }
+
+        /**
+         * ฟังก์ชันเปิด-ปิดการแสดงผลส่วนเลือกงบประมาณ (Toggle)
+         */
+        function toggleBudgetMode(isLimited) {
+            const budgetSection = document.getElementById('budget_section');
+            const unlimitedMsg = document.getElementById('unlimited_msg');
+            const toggleLabel = document.getElementById('toggle_label');
+            
+            if (isLimited) {
+                budgetSection.classList.remove('hidden'); // แสดงแถบเลื่อน
+                unlimitedMsg.classList.add('hidden');    // ซ่อนข้อความโหมดไม่จำกัด
+                toggleLabel.innerText = "จำกัดงบประมาณ";
+            } else {
+                budgetSection.classList.add('hidden');    // ซ่อนแถบเลื่อน
+                unlimitedMsg.classList.remove('hidden'); // แสดงข้อความโหมดไม่จำกัด
+                toggleLabel.innerText = "ไม่จำกัดงบประมาณ";
+            }
+        }
+
+        /**
+         * ฟังก์ชันหลักในการรวบรวมข้อมูลและส่งไปให้ Backend API (/api/build)
+         */
+        async function buildPC() {
+            // 1. ดึงข้อมูลจาก Input ทั้งหมด
+            const isLimited = document.getElementById('budget_toggle').checked;
+            const budget = isLimited ? document.getElementById('budget_slider').value : 999999;
+            const cpu = document.getElementById('cpu_brand').value;
+            const gpu = document.getElementById('gpu_brand').value;
+            const ram = document.getElementById('ram_size').value;
+            const ssd = document.getElementById('ssd_size').value;
+            
+            const resArea = document.getElementById('result_area');
+            const specsList = document.getElementById('specs_list');
+
+            // 2. แสดงสถานะ Loading ระหว่างรอข้อมูล
+            resArea.classList.remove('hidden');
+            specsList.innerHTML = `<div class="animate-pulse text-purple-600 font-bold text-center p-10">AI กำลังคัดเลือกอุปกรณ์ที่ดีที่สุด...</div>`;
+
+            try {
+                // 3. ส่ง Request (POST) ไปยัง Backend ในรูปแบบ JSON
+                const response = await fetch('/api/build', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        is_limited: isLimited,
+                        budget: budget, 
+                        cpu_brand: cpu, 
+                        gpu_brand: gpu, 
+                        ram_size: ram, 
+                        ssd_size: ssd 
+                    })
+                });
+                const data = await response.json();
+
+                // 4. ตรวจสอบว่า API ส่งผลลัพธ์สำเร็จหรือไม่
+                if (data.status === 'error') {
+                    // กรณีไม่พบสเปคหรือ Error ให้แสดงข้อความแจ้งเตือน
+                    specsList.innerHTML = `<div class="text-red-500 font-bold p-4 bg-red-50 rounded-xl">${data.message}</div>`;
+                } else {
+                    // กรณีสำเร็จ: จัดการการแสดงผลกราฟิกและรายการอุปกรณ์
+                    const isNoGpu = data.gpu.includes('None') || data.gpu.includes('On-Board');
+                    
+                    specsList.innerHTML = `
+                        <div class="grid grid-cols-1 gap-4">
+                            <div class="flex justify-between border-b pb-2"><span>🖥️ CPU</span><span class="font-bold">${data.cpu}</span></div>
+                            <div class="flex justify-between border-b pb-2"><span>🧩 Mainboard</span><span class="font-bold">${data.mb}</span></div>
+                            <div class="flex justify-between border-b pb-2"><span>📟 RAM</span><span class="font-bold">${data.ram}</span></div>
+                            <div class="flex justify-between border-b pb-2 ${isNoGpu ? 'text-slate-400' : ''}">
+                                <span>🎮 GPU</span>
+                                <span class="font-bold">${data.gpu}</span>
+                            </div>
+                            <div class="flex justify-between border-b pb-2"><span>💾 SSD</span><span class="font-bold">${data.ssd}</span></div>
+                        </div>
+                        
+                        <div class="mt-8 p-6 bg-slate-900 text-white rounded-2xl flex justify-between items-center">
+                            <div>
+                                <p class="text-slate-400 text-sm">ราคารวมโดยประมาณ</p>
+                                <p class="text-3xl font-black text-purple-400">${data.total_price.toLocaleString()} ฿</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-slate-400 text-sm">${isLimited ? 'คงเหลือ' : 'สถานะ'}</p>
+                                <p class="text-xl font-bold text-green-400">${isLimited ? data.change.toLocaleString() + ' ฿' : 'จัดสเปคระดับสูงสุด'}</p>
+                            </div>
+                        </div>
+                    `;
+                    // เลื่อนหน้าจอลงไปที่ส่วนผลลัพธ์อย่างนุ่มนวล
+                    resArea.scrollIntoView({ behavior: 'smooth' });
+                }
+            } catch (e) {
+                // กรณีเชื่อมต่อ Server ไม่ได้
+                specsList.innerHTML = `<div class="text-red-500 font-bold">Error: ไม่สามารถเชื่อมต่อกับ Server ได้ กรุณาลองใหม่ภายหลัง</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
