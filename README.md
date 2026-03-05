@@ -17,7 +17,7 @@ A collection of academic projects and coursework.
 - คุมงบอยู่ : ระบบจะพยายามยัดสเปคที่ "แรงที่สุด" เท่าที่เงินในกระเป๋าจะเอื้ออำนวย โดยมีตัวเลือกสลับโหมดระหว่าง "งบจำกัด" กับ "จัดเต็มไม่อั้น" ได้ในคลิกเดียว
 
 ## 🛠️ เทคโนโลยีที่ใช้ (Tech Stack)
-- **Language:** Python
+- **Language:** Python,HTML
 - **Libraries:** flask,pandas,sklearn.neighbors
 
 ## 📦 การติดตั้งและการใช้งาน (Setup & Installation)
