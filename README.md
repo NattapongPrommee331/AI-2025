@@ -17,7 +17,7 @@ A collection of academic projects and coursework.
 
 ## 🛠️ เทคโนโลยีที่ใช้ (Tech Stack)
 - **Language:** Python,HTML
-- **Libraries:** flask,pandas,sklearn.neighbors
+- **Libraries:** warning,pandas,sklearn.neighbors
 
 ## 📦 การติดตั้งและการใช้งาน (Setup & Installation)
    - 1.ทำการติดตั้ง Python
