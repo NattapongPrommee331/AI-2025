@@ -1,17 +1,16 @@
-from flask import Flask, render_template, request, jsonify
+import streamlit as st
 import pandas as pd
-from sklearn.neighbors import NearestNeighbors
 import warnings
 
 # ปิดการแจ้งเตือน
 warnings.filterwarnings('ignore')
 
-app = Flask(__name__)
+# --- ตั้งค่าหน้าเว็บ ---
+st.set_page_config(page_title="AI PC Builder", page_icon="🖥️")
+st.title("🖥️ ระบบจัดสเปคคอมพิวเตอร์อัจฉริยะ")
+st.markdown("ระบุงบประมาณและความต้องการของคุณ เพื่อให้ AI ช่วยจัดสเปคที่ดีที่สุด")
 
-# --- 1. ฐานข้อมูลอะไหล่ (อัปเดตข้อมูลจากที่คุณให้มา + เพิ่มฟิลด์คัดกรอง) ---
-
-# --- ส่วนฐานข้อมูลใหม่ (วางใน app.py) ---
-
+# --- 1. ฐานข้อมูลอะไหล่ ---
 cpus = [
     {"name": "Intel Core i3-12100F", "cpu_brand": "Intel", "price": 3000, "socket": "LGA1700", "ram_support": "DDR4"},
     {"name": "Intel Core i5-12400F", "cpu_brand": "Intel", "price": 4800, "socket": "LGA1700", "ram_support": "DDR4"},
@@ -78,113 +77,92 @@ gpus = [
     {"name": "AMD Radeon RX 7900 XT 20GB", "price": 32000, "gpu_brand": "AMD"},
     {"name": "NVIDIA RTX 4080 SUPER 16GB", "price": 40000, "gpu_brand": "NVIDIA"},
     {"name": "AMD Radeon RX 7900 XTX 24GB", "price": 38000, "gpu_brand": "AMD"},
-    {"name": "NVIDIA RTX 4090 24GB", "price": 75000, "gpu_brand": "NVIDIA"}
+    {"name": "NVIDIA RTX 4090 24GB", "price": 75000, "gpu_brand": "NVIDIA"},
+    {"name": "AMD Radeon RX 550 4GB", "price": 1500, "gpu_brand": "AMD"},
+    {"name": "AMD Radeon RX 560 4GB", "price": 1800, "gpu_brand": "AMD"},
+    {"name": "AMD Radeon RX 570 4GB", "price": 2200, "gpu_brand": "AMD"},
+    {"name": "AMD Radeon RX 580 8GB", "price": 2800, "gpu_brand": "AMD"},
+    {"name": "AMD Radeon RX 590 8GB", "price": 3500, "gpu_brand": "AMD"}
 ]
 
 rams = [
-    # --- RAM ---
-    {"name": "4GB DDR3 1600MHz", "price": 250, "ram_type": "DDR3", "ram_size": 4},
-    {"name": "4GB DDR4 2400MHz", "price": 400, "ram_type": "DDR4", "ram_size": 4},
     {"name": "4GB DDR4 3200MHz", "price": 450, "ram_type": "DDR4", "ram_size": 4},
-    {"name": "8GB DDR4 2666MHz", "price": 600, "ram_type": "DDR4", "ram_size": 8},
     {"name": "8GB DDR4 3200MHz", "price": 700, "ram_type": "DDR4", "ram_size": 8},
-    {"name": "16GB (1x16GB) DDR4 3200MHz", "price": 1200, "ram_type": "DDR4", "ram_size": 16},
     {"name": "16GB (8GBx2) DDR4 3200MHz", "price": 1400, "ram_type": "DDR4", "ram_size": 16},
-    {"name": "16GB (8GBx2) DDR4 3600MHz", "price": 1600, "ram_type": "DDR4", "ram_size": 16},
-    {"name": "32GB (16GBx2) DDR4 3200MHz", "price": 2500, "ram_type": "DDR4", "ram_size": 32},
-    {"name": "16GB (1x16GB) DDR5 4800MHz", "price": 1600, "ram_type": "DDR5", "ram_size": 16},
     {"name": "16GB (8GBx2) DDR5 5200MHz", "price": 2000, "ram_type": "DDR5", "ram_size": 16},
-    {"name": "32GB (16GBx2) DDR5 6000MHz", "price": 4200, "ram_type": "DDR5", "ram_size": 32},
-    {"name": "64GB (32GBx2) DDR5 6000MHz", "price": 7500, "ram_type": "DDR5", "ram_size": 64}
+    {"name": "32GB (16GBx2) DDR5 6000MHz", "price": 4200, "ram_type": "DDR5", "ram_size": 32}
 ]
 
 ssds = [
-
+    {"name": "250GB M.2 NVMe", "price": 500, "ssd_size": 250},
     {"name": "500GB M.2 NVMe", "price": 1500, "ssd_size": 500},
     {"name": "1TB M.2 NVMe", "price": 2800, "ssd_size": 1000},
     {"name": "2TB M.2 NVMe", "price": 5200, "ssd_size": 2000}
-
 ]
 
-# --- ส่วน Loop สร้าง valid_builds ที่แก้ให้ตรงกับ Key ด้านบน ---
-valid_builds = []
-for cpu in cpus:
-    for mb in mbs:
-        if cpu['socket'] == mb['socket'] and cpu['ram_support'] == mb['ram_type']:
-            for ram in rams:
-                if ram['ram_type'] == mb['ram_type']:
-                    for gpu in gpus:
-                        for ssd in ssds:
-                            valid_builds.append({
-                                "cpu": cpu['name'],
-                                "cpu_brand": cpu['cpu_brand'],
-                                "mb": mb['name'],
-                                "ram": ram['name'],
-                                "ram_size": ram['ram_size'],
-                                "gpu": gpu['name'],
-                                "gpu_brand": gpu['gpu_brand'],
-                                "ssd": ssd['name'],
-                                "ssd_size": ssd['ssd_size'],
-                                "price": cpu['price'] + mb['price'] + ram['price'] + gpu['price'] + ssd['price']
-                            })
+# --- 2. สร้าง Database ชั่วคราว (Cache ไว้เพื่อความเร็ว) ---
+@st.cache_data
+def get_all_builds():
+    valid_builds = []
+    for cpu in cpus:
+        for mb in mbs:
+            if cpu['socket'] == mb['socket'] and cpu['ram_support'] == mb['ram_type']:
+                for ram in rams:
+                    if ram['ram_type'] == mb['ram_type']:
+                        for gpu in gpus:
+                            for ssd in ssds:
+                                valid_builds.append({
+                                    "cpu": cpu['name'], "cpu_brand": cpu['cpu_brand'],
+                                    "mb": mb['name'], "ram": ram['name'], "ram_size": ram['ram_size'],
+                                    "gpu": gpu['name'], "gpu_brand": gpu['gpu_brand'],
+                                    "ssd": ssd['name'], "ssd_size": ssd['ssd_size'],
+                                    "price": cpu['price'] + mb['price'] + ram['price'] + gpu['price'] + ssd['price']
+                                })
+    return pd.DataFrame(valid_builds)
 
-import pandas as pd
-df = pd.DataFrame(valid_builds)
+df = get_all_builds()
 
-@app.route('/')
-def home():
-    return render_template('index.html')
+# --- 3. ส่วน UI สำหรับรับค่า (Sidebar) ---
+st.sidebar.header("⚙️ ตั้งค่าความต้องการ")
+budget = st.sidebar.number_input("งบประมาณ (บาท)", min_value=5000, value=25000, step=500)
+cpu_choice = st.sidebar.selectbox("ค่าย CPU", ["Any", "Intel", "AMD"])
+gpu_choice = st.sidebar.selectbox("ค่าย GPU", ["Any", "NVIDIA", "AMD"])
+ram_choice = st.sidebar.selectbox("ขนาด RAM (GB)", ["Any", 8, 16, 32])
+ssd_choice = st.sidebar.selectbox("ขนาด SSD (GB)", ["Any", 250, 500, 1000, 2000])
 
-@app.route('/api/build', methods=['POST'])
-def build_pc():
-    data = request.json
-    budget = float(data.get('budget'))
-    cpu_brand = data.get('cpu_brand')
-    gpu_brand = data.get('gpu_brand')
-    ram_size = data.get('ram_size')
-    ssd_size = data.get('ssd_size')
-
-    # 1. เริ่มต้นด้วยการ Copy DataFrame ทั้งหมด
+# --- 4. ตรรกะการประมวลผล ---
+if st.button("🚀 จัดสเปคเดี๋ยวนี้!"):
     filtered_df = df.copy()
 
-    # 2. กรองตามเงื่อนไข (ถ้าไม่ใช่ "Any" หรือ "อะไรก็ได้" ให้ทำการกรอง)
-    if cpu_brand != 'Any':
-        filtered_df = filtered_df[filtered_df['cpu_brand'] == cpu_brand]
+    if cpu_choice != "Any":
+        filtered_df = filtered_df[filtered_df['cpu_brand'] == cpu_choice]
+    if gpu_choice != "Any":
+        filtered_df = filtered_df[filtered_df['gpu_brand'] == gpu_choice]
+    if ram_choice != "Any":
+        filtered_df = filtered_df[filtered_df['ram_size'] == int(ram_choice)]
+    if ssd_choice != "Any":
+        filtered_df = filtered_df[filtered_df['ssd_size'] == int(ssd_choice)]
     
-    if gpu_brand != 'Any':
-        filtered_df = filtered_df[filtered_df['gpu_brand'] == gpu_brand]
+    # กรองตามงบประมาณ
+    filtered_df = filtered_df[filtered_df['price'] <= budget]
 
-    if ram_size != 'Any':
-        filtered_df = filtered_df[filtered_df['ram_size'] == int(ram_size)]
-
-    if ssd_size != 'Any':
-        filtered_df = filtered_df[filtered_df['ssd_size'] == int(ssd_size)]
-
-    # 3. กรองงบประมาณ (เฉพาะกรณีที่จำกัดงบ)
-    if data.get('is_limited'):
-        filtered_df = filtered_df[filtered_df['price'] <= budget]
-
-    # 4. ตรวจสอบว่าหลังจากกรองแล้วเหลือข้อมูลไหม
-    if filtered_df.empty:
-        return jsonify({
-            'status': 'error',
-            'message': '❌ ไม่พบสเปคที่ตรงกับเงื่อนไขของคุณในงบที่กำหนด กรุณาเพิ่มงบหรือปรับตัวเลือกอุปกรณ์'
-        })
-
-    # 5. ใช้ KNN หรือเลือกตัวที่แรงที่สุด/ใกล้เคียงที่สุด
-    # (ตัวอย่าง: เลือกตัวที่ราคาสูงที่สุดภายใต้งบเพื่อให้ได้ของแรงสุด)
-    best_match = filtered_df.loc[filtered_df['price'].idxmax()]
-
-    return jsonify({
-        'status': 'success',
-        'cpu': best_match['cpu'],
-        'mb': best_match['mb'],
-        'ram': best_match['ram'],
-        'gpu': best_match['gpu'],
-        'ssd': best_match['ssd'],
-        'total_price': int(best_match['price']),
-        'change': int(budget - best_match['price'])
-    })
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    if not filtered_df.empty:
+        # เลือกตัวที่ราคาสูงที่สุดในงบ (เพื่อความแรงสูงสุด)
+        best_match = filtered_df.loc[filtered_df['price'].idxmax()]
+        
+        # แสดงผลลัพธ์
+        st.success(f"✅ จัดสเปคสำเร็จ! อยู่ในงบ {budget:,.0f} บาท")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            st.info(f"**CPU:** {best_match['cpu']}")
+            st.info(f"**Mainboard:** {best_match['mb']}")
+            st.info(f"**RAM:** {best_match['ram']}")
+        with col2:
+            st.info(f"**GPU:** {best_match['gpu']}")
+            st.info(f"**SSD:** {best_match['ssd']}")
+            st.warning(f"**ราคารวมทั้งสิ้น:** {best_match['price']:,.0f} บาท")
+        
+        st.write(f"💰 เงินเหลือ: {budget - best_match['price']:,.0f} บาท")
+    else:
+        st.error("❌ ไม่พบสเปคที่ตรงกับเงื่อนไขในงบนี้ ลองเพิ่มงบหรือปรับตัวเลือกดูครับ")
