@@ -167,6 +167,7 @@ ssd_choice = st.sidebar.selectbox("ขนาด SSD (GB)", ["Any", 250, 500, 100
 if st.button("🚀 จัดสเปคเดี๋ยวนี้!"):
     filtered_df = df.copy()
 
+    # กรองข้อมูลตามที่เลือก
     if cpu_choice != "Any":
         filtered_df = filtered_df[filtered_df['cpu_brand'] == cpu_choice]
     if gpu_choice != "Any":
@@ -180,10 +181,10 @@ if st.button("🚀 จัดสเปคเดี๋ยวนี้!"):
     filtered_df = filtered_df[filtered_df['price'] <= budget]
 
     if not filtered_df.empty:
-        # เลือกตัวที่ราคาสูงที่สุดในงบ (เพื่อความแรงสูงสุด)
+        # เลือกตัวที่ราคาสูงที่สุดในงบ
         best_match = filtered_df.loc[filtered_df['price'].idxmax()]
         
-        # แสดงผลลัพธ์
+        # --- แสดงผลลัพธ์สเปค ---
         st.success(f"✅ จัดสเปคสำเร็จ! อยู่ในงบ {budget:,.0f} บาท")
         
         col1, col2 = st.columns(2)
@@ -196,8 +197,41 @@ if st.button("🚀 จัดสเปคเดี๋ยวนี้!"):
             st.info(f"**SSD:** {best_match['ssd']}")
             st.warning(f"**ราคารวมทั้งสิ้น:** {best_match['price']:,.0f} บาท")
         
+        # --- 💡 ส่วนวิเคราะห์ความเหมาะสม (ที่เพิ่มใหม่) ---
+        st.markdown("---")
+        st.subheader("💡 สเปคนี้เหมาะสำหรับอะไร?")
+        
+        # สร้างรายการวิเคราะห์
+        analysis = []
+        gpu_name = best_match['gpu'].upper()
+        cpu_name = best_match['cpu'].upper()
+        ram_val = best_match['ram_size']
+
+        # วิเคราะห์การเล่นเกมและกราฟิก
+        if any(x in gpu_name for x in ["4090", "4080", "7900"]):
+            analysis.append("🎮 **ระดับ Ultra:** เล่นได้ทุกเกมบนโลกในระดับ 4K และรองรับงานตัดต่อวิดีโอระดับมืออาชีพ")
+        elif any(x in gpu_name for x in ["4070", "4060", "3060", "7600", "6700"]):
+            analysis.append("🎮 **ระดับ High:** เล่นเกมใหม่ๆ ได้ลื่นมากในระดับ Full HD ถึง 2K และงานสตรีมมิ่ง")
+        elif any(x in gpu_name for x in ["GT 1030", "RX 550", "RX 560"]):
+            analysis.append("📑 **ระดับพื้นฐาน:** เหมาะสำหรับงานเอกสาร, เรียนออนไลน์, และดูหนังความละเอียดสูง")
+        else:
+            analysis.append("🎮 **ระดับกลาง:** เล่นเกมออนไลน์ทั่วไป (Valorant, Roblox, LoL) ได้สบาย")
+
+        # วิเคราะห์มัลติทาสก์ (RAM)
+        if ram_val >= 32:
+            analysis.append("💻 **Multi-tasking:** แรมเยอะมาก เหมาะสำหรับเปิดหลายโปรแกรมพร้อมกันหรือรัน VM")
+        elif ram_val <= 4:
+            analysis.append("⚠️ **ข้อควรระวัง:** แรมน้อยเกินไปสำหรับการใช้งานปัจจุบัน อาจมีอาการค้างได้")
+
+        # แสดงผลการวิเคราะห์เป็นข้อๆ
+        for item in analysis:
+            st.write(item)
+
+        st.markdown("---")
         st.write(f"💰 เงินเหลือ: {budget - best_match['price']:,.0f} บาท")
+        
     else:
         st.error("❌ ไม่พบสเปคที่ตรงกับเงื่อนไขในงบนี้ ลองเพิ่มงบหรือปรับตัวเลือกดูครับ")
+
 
 
