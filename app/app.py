@@ -127,7 +127,7 @@ st.sidebar.header("⚙️ ตั้งค่าความต้องการ
 budget = st.sidebar.number_input("งบประมาณ (บาท)", min_value=5000, value=25000, step=500)
 cpu_choice = st.sidebar.selectbox("ค่าย CPU", ["Any", "Intel", "AMD"])
 gpu_choice = st.sidebar.selectbox("ค่าย GPU", ["Any", "NVIDIA", "AMD"])
-ram_choice = st.sidebar.selectbox("ขนาด RAM (GB)", ["Any", 8, 16, 32])
+ram_choice = st.sidebar.selectbox("ขนาด RAM (GB)", ["Any", 4, 8, 16, 32])
 ssd_choice = st.sidebar.selectbox("ขนาด SSD (GB)", ["Any", 250, 500, 1000, 2000])
 
 # --- 4. ตรรกะการประมวลผล ---
@@ -166,3 +166,4 @@ if st.button("🚀 จัดสเปคเดี๋ยวนี้!"):
         st.write(f"💰 เงินเหลือ: {budget - best_match['price']:,.0f} บาท")
     else:
         st.error("❌ ไม่พบสเปคที่ตรงกับเงื่อนไขในงบนี้ ลองเพิ่มงบหรือปรับตัวเลือกดูครับ")
+
