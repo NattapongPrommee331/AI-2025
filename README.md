@@ -22,7 +22,8 @@ A collection of academic projects and coursework.
 ## 📦 การติดตั้งและการใช้งาน (Setup & Installation)
    - 1.ทำการติดตั้ง Python
    - 2.ติดตั้ง VScode เพื่อนำมาใช้งาน
-   - 3.เปิดใช้งาน VScode ด้วยภาาษาpython 
+   - 3.เปิดใช้งาน VScode ด้วยภาาษาpython
+   - Streamlit : https://ai-2025-2sddz6xwkhxdzgdwk96xfj.streamlit.app/
 
    
 ## 📗 ผลสรุป (Summarize)
