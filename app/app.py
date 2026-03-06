@@ -100,6 +100,39 @@ ssds = [
     {"name": "2TB M.2 NVMe", "price": 5200, "ssd_size": 2000}
 ]
 
+# --- วิเคราะห์ความเหมาะสม
+def analyze_suitability(row):
+    score_tags = []
+    
+    # วิเคราะห์จาก GPU
+    gpu_name = row['gpu'].upper()
+    high_end_gpus = ['4070', '4080', '4090', '7800', '7900']
+    mid_end_gpus = ['3060', '4060', '6600', '6700', '7600']
+    
+    if any(x in gpu_name for x in high_end_gpus):
+        score_tags.append("🎮 เล่นเกม 4K / สตรีมเกมระดับสูง")
+        score_tags.append("🎬 ตัดต่อวิดีโอ 4K / งาน 3D Rendering")
+    elif any(x in gpu_name for x in mid_end_gpus):
+        score_tags.append("🎮 เล่นเกม Full HD - 2K ลื่นๆ")
+        score_tags.append("🎥 ตัดต่อวิดีโอ YouTube / ทำกราฟิก")
+    elif "GT 1030" in gpu_name or "RX 550" in gpu_name:
+        score_tags.append("📑 งานเอกสาร / เรียนออนไลน์ / ดูหนัง 4K")
+    else:
+        score_tags.append("🎮 เล่นเกมทั่วไป / งานกราฟิกเริ่มต้น")
+# วิเคราะห์จาก RAM
+    if row['ram_size'] >= 32:
+        score_tags.append("💻 เปิดโปรแกรมพร้อมกันได้เยอะมาก (Multitasking)")
+        score_tags.append("🧪 งานจำลองระบบ (Virtual Machines / Docker)")
+    elif row['ram_size'] < 8:
+        score_tags.append("⚠️ คำเตือน: แรมน้อย อาจมีอาการหน่วงเมื่อเปิด Chrome หลายแท็บ")
+
+    # วิเคราะห์จาก CPU (ประเมินคร่าวๆ จากชื่อรุ่น)
+    cpu_name = row['cpu'].upper()
+    if "I7" in cpu_name or "I9" in cpu_name or "RYZEN 7" in cpu_name or "RYZEN 9" in cpu_name:
+        score_tags.append("🚀 ประมวลผลหนักๆ ได้ดี (AI, Engineering, Data)")
+        
+    return score_tags
+
 # --- 2. สร้าง Database ชั่วคราว (Cache ไว้เพื่อความเร็ว) ---
 @st.cache_data
 def get_all_builds():
@@ -166,4 +199,5 @@ if st.button("🚀 จัดสเปคเดี๋ยวนี้!"):
         st.write(f"💰 เงินเหลือ: {budget - best_match['price']:,.0f} บาท")
     else:
         st.error("❌ ไม่พบสเปคที่ตรงกับเงื่อนไขในงบนี้ ลองเพิ่มงบหรือปรับตัวเลือกดูครับ")
+
 
